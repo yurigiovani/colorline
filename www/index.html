@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="mobile-web-app-capable" content="yes">
+
+	<title>FlappyJS</title>
+
+	<link rel="stylesheet" href="assets/css/app.css">
+
+	<script src="sprite.js"></script>
+	<script src="objects.js"></script>
+	<script src="cordova.js"></script>
+</head>
+<body>
+<script>
+
+var
+// Game vars //
+
+canvas,
+ctx,
+width,
+height,
+
+retryBtn,
+
+fgpos = 0,
+frames = 0,
+
+// State vars //
+
+currentstate,
+states = {
+	Splash: 0, Game: 1, Score: 2, NextWave: 3
+};
+
+/**
+ * Called on mouse or touch press. Update and change state
+ * depending on current game state.
+ *
+ * @param  {MouseEvent/TouchEvent} evt tho on press event
+ */
+function onpress(evt) {
+	switch (currentstate) {
+		// change state and update bird velocity
+		case states.Splash:
+			currentstate = states.Game;
+
+			break;
+
+		// update bird velocity
+		case states.Game:
+			player.jump();
+
+			break;
+
+		// change state if event within okbtn bounding box
+		case states.Score:
+			var mx = evt.offsetX, my = evt.offsetY;
+
+			if (mx == null || my == null) {
+				mx = evt.touches[0].clientX;
+				my = evt.touches[0].clientY;
+			}
+
+			if (retryBtn.x < mx && mx < retryBtn.x + retryBtn.width &&
+				retryBtn.y < my && my < retryBtn.y + retryBtn.height
+			) {
+				//colocar revMob aqui
+
+				Game.retries ++;
+
+				if(Game.retries == 1) {
+					Game.loadAds();
+				}
+				else {
+					if(Game.retries >= 6) {
+						Game.showAds();
+						Game.retries = 0;
+					}
+				}
+
+
+				Game.reset();
+				currentstate = states.Game;
+			}
+	}
+}
+
+/**
+ * Starts and initiate the game
+ */
+function main() {
+	// create canvas and set width/height
+	canvas = document.createElement("canvas");
+
+	width = window.screen.width;
+	height = window.screen.height;
+
+	// listen for input event
+	if (window.navigator.msPointerEnabled) {
+		document.addEventListener("MSPointerDown", onpress, false);
+	}
+	else {
+		document.addEventListener("touchstart", onpress, false);
+	}
+
+	canvas.width = width;
+	canvas.height = height;
+
+	ctx = canvas.getContext("2d");
+
+	currentstate = states.Splash;
+	// append canvas to document
+	document.body.appendChild(canvas);
+
+	// initate graphics and retryBtn
+	var img = new Image();
+	img.onload = function() {
+
+		initSprites(this);
+
+		Sound.init();
+
+		retryBtn = {
+			x: (width / 2 - s_buttons.Retry.width / 2),
+			y: height - 200,
+			width: s_buttons.Retry.width,
+			height: s_buttons.Retry.height
+		}
+
+		run();
+	}
+
+	img.src = "assets/sprite/sprite.png";
+
+	run();
+}
+
+/**
+ * Starts and update gameloop
+ */
+function run() {
+	var loop = function() {
+		update();
+		render();
+		window.requestAnimationFrame(loop, canvas);
+	}
+
+	window.requestAnimationFrame(loop, canvas);
+}
+
+/**
+ * Update forground, bird and pipes position
+ */
+function update() {
+	frames++;
+	fgpos = (fgpos - 2) % 160;
+
+	background.update();
+
+	// player.update();
+
+	if (currentstate === states.Splash) {
+	}
+	else if (currentstate === states.Score) {
+		// set best score to maximum score
+		// esse score.score - 1 é devido ao problema de setar o score.score = 1 ao iniciar o jogo, verificar futuramente
+		score.best = Math.max(score.best, score.score - 1);
+		localStorage.setItem("best", score.best);
+	}
+	else if (currentstate === states.Game) {
+	}
+
+	player.update();
+	lines.update();
+}
+
+/**
+ * Draws bird and all pipes and assets to the canvas
+ */
+function render() {
+
+	background.draw();
+
+	player.draw();
+	lines.draw();
+
+	score.drawScore();
+
+	ctx.fillStyle = "#fff";
+
+	var width2 = width/2; // center of canvas
+
+	if (currentstate === states.Splash) {
+		appScreen.splash.draw();
+	}
+	if(currentstate === states.NextWave) {
+		appScreen.nextWave.draw();
+	}
+	if (currentstate === states.Score) {
+		appScreen.score.draw();
+	}
+	else {
+	}
+}
+
+// start and run the game
+
+if(window.cordova) {
+	document.addEventListener('deviceready', function() {
+		main();
+	}, false);
+}
+else {
+	main();
+}
+
+
+
+</script>
+
+</body>
+</html>

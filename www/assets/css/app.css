@@ -1,0 +1,18 @@
+html,
+body {
+	margin: 0;
+	backface-visibility:hidden;
+	-webkit-backface-visibility:hidden;
+	overflow: hidden;
+	-ms-content-zooming: none;
+	-ms-touch-action:none;
+}
+canvas {
+	display: block;
+	position: absolute;
+	margin: auto;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+}
